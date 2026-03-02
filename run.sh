@@ -1,6 +1,6 @@
-#!/bin/bash
-cd build
-cmake ..
-make
-./main
-cd ../
+#!/usr/bin/env bash
+set -e
+
+cmake -S . -B build
+cmake --build build
+./build/main
