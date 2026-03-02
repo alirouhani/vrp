@@ -5,7 +5,7 @@ TEST(FunctionTest, PrintMessage) {
     testing::internal::CaptureStdout();
     print_message("Hello, Test!");
     std::string output = testing::internal::GetCapturedStdout();
-    EXPECT_EQ(output, "Hello, Test0!\n");
+    EXPECT_EQ(output, "Hello, Test!\n");
 }
 
 TEST(print_message, EmptyString) {
