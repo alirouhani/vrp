@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Main executable
-add_executable(main main.cpp src/params.cpp)
+add_executable(main main.cpp src/Params.cpp)
 
 # Enable testing
 enable_testing()
