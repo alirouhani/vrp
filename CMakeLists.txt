@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Main executable
-add_executable(main main.cpp src/Params.cpp)
+add_executable(main main.cpp)
 
 # Enable testing
 enable_testing()
@@ -23,7 +23,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 # Test executable
-add_executable(unitTest tests/unitTest.cpp src/Params.cpp)
+add_executable(unitTest tests/unitTest.cpp)
 target_link_libraries(unitTest GTest::gtest_main)
 
 # Discover tests

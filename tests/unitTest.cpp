@@ -1,18 +1,18 @@
 #include <gtest/gtest.h>
+#include <fstream>
 #include "../include/Params.h"
 
-TEST(FunctionTest, PrintMessage) {
-    testing::internal::CaptureStdout();
-    Params params;
-    params.print_message("Hello, Test!");
-    std::string output = testing::internal::GetCapturedStdout();
-    EXPECT_EQ(output, "Hello, Test!\n");
+TEST(FileContentTest, IsFileEmpty) {
+    std::ifstream file("test_data.vrp");
+    
+    ASSERT_TRUE(file.is_open()) << "Could not open file.";
+    EXPECT_NE(file.peek(), std::ifstream::traits_type::eof());
 }
 
-TEST(print_message, EmptyString) {
-    testing::internal::CaptureStdout();
+TEST(ParamsTest, IsParseTrue) {
     Params params;
-    params.print_message("");
-    std::string output = testing::internal::GetCapturedStdout();
-    EXPECT_EQ(output, "\n");
+    params.loadFromFile("test_data.vrp");
+    EXPECT_EQ(params.N, 16);
+    EXPECT_EQ(params.K, 8);
+    EXPECT_EQ(params.vehicle_capacity, 35);
 }
