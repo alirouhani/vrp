@@ -12,5 +12,5 @@ jobs:
       run: |
         cmake -S . -B build
         cmake --build build
-        ./build/main
+        ./build/main "test_data.vrp"
         ./build/unitTest

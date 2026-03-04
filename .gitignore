@@ -1,4 +1,4 @@
 build/
-Instances/BKS_challenge
+Instances/
 *.o
 *.d
