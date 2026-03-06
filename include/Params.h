@@ -82,7 +82,7 @@ struct Params {
                         y - y_coord[j]
                     );
 
-                    distance_matrix[index(i,j)] = d;
+                    distance_matrix[index(i,j)] = std::round(d);
                 }
             }
 

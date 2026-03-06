@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <fstream>
 #include "../include/Params.h"
-#include "../include/VrpSolver.h"
+#include "../include/Vrp_Solver.h"
 
 TEST(FileContentTest, IsFileEmpty) {
     std::ifstream file("test_data.vrp");

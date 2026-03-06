@@ -18,7 +18,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 # 4. Main Executable
-add_executable(main main.cpp src/VrpSolver.cpp)
+add_executable(main main.cpp src/Vrp_Solver.cpp)
 
 # Link the imported target from find_package
 target_link_libraries(main PRIVATE ortools::ortools)
@@ -30,7 +30,7 @@ target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR}/include)
 enable_testing()
 
 # Test executable
-add_executable(unitTest tests/unitTest.cpp src/VrpSolver.cpp)
+add_executable(unitTest tests/unitTest.cpp src/Vrp_Solver.cpp)
 target_link_libraries(unitTest GTest::gtest_main ortools::ortools)
 
 # Discover tests
