@@ -10,7 +10,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build and Test
       run: |
-        cmake -S . -B build
+        # Point to the specific installation directory on your VM
+        cmake -S . -B build -DCMAKE_PREFIX_PATH=/home/alimabna/or-tools/install
         cmake --build build
         ./build/main "test_data.vrp"
         ./build/unitTest
