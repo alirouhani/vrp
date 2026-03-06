@@ -12,5 +12,5 @@ jobs:
       run: |
         cmake -S . -B build -DCMAKE_PREFIX_PATH=/home/alimabna/or-tools/install
         cmake --build build
-        ./build/main "test_data.vrp"
-        ./build/unitTest
+        ./build/vrp_app "test_data.vrp"
+        ./build/vrp_tests
