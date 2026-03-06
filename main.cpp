@@ -1,14 +1,24 @@
 #include "include/Params.h"
+#include "include/VrpSolver.h"
 #include <iostream>
 #include <string>
 
-int main(int argc, char* argv[]) {
+int main(int argc, char** argv) {
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <file_path>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <path_to_instance.txt>" << std::endl;
         return 1;
     }
-    std::string file_path = argv[1];
-    Params params;
-    params.loadFromFile(file_path);
+
+    try {
+        Params p;
+        p.loadFromFile(argv[1]);
+        std::cout << "Loaded instance with " << p.N << " nodes and " 
+                  << p.K << " vehicles. Capacity: " << p.vehicle_capacity << std::endl;
+        
+        SolveVRPWithMTZ(p);
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
     return 0;
 }
