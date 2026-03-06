@@ -1,38 +1,63 @@
-cmake_minimum_required(VERSION 3.22.1)
+cmake_minimum_required(VERSION 3.22)
 project(vrp_project)
 
-# 1. Project Settings
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 2. Find Installed Packages
+# ---------------------------------------------------------
+# Dependencies
+# ---------------------------------------------------------
 find_package(ortools REQUIRED)
 
-# 3. Handle Google Test
 include(FetchContent)
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        v1.14.0
+  GIT_TAG v1.14.0
 )
 FetchContent_MakeAvailable(googletest)
 
-# 4. Main Executable
-add_executable(main main.cpp src/Vrp_Solver.cpp)
+# ---------------------------------------------------------
+# Core library (compiled once)
+# ---------------------------------------------------------
+add_library(vrp_core OBJECT
+    src/Vrp_Solver.cpp
+)
 
-# Link the imported target from find_package
-target_link_libraries(main PRIVATE ortools::ortools)
+target_include_directories(vrp_core PUBLIC
+    ${PROJECT_SOURCE_DIR}/include
+)
 
-# Use target-specific include directories instead of global ones
-target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(vrp_core PUBLIC
+    ortools::ortools
+)
 
-# 5. Testing
+# ---------------------------------------------------------
+# Application
+# ---------------------------------------------------------
+add_executable(vrp_app
+    main.cpp
+    $<TARGET_OBJECTS:vrp_core>
+)
+
+target_link_libraries(vrp_app PRIVATE
+    ortools::ortools
+)
+
+# ---------------------------------------------------------
+# Tests
+# ---------------------------------------------------------
 enable_testing()
 
-# Test executable
-add_executable(unitTest tests/unitTest.cpp src/Vrp_Solver.cpp)
-target_link_libraries(unitTest GTest::gtest_main ortools::ortools)
+add_executable(vrp_tests
+    tests/unitTest.cpp
+    $<TARGET_OBJECTS:vrp_core>
+)
 
-# Discover tests
+target_link_libraries(vrp_tests PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    ortools::ortools
+)
+
 include(GoogleTest)
-gtest_discover_tests(unitTest)
+gtest_discover_tests(vrp_tests)
