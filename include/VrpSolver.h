@@ -3,10 +3,11 @@
 
 #include "Params.h"
 
-// Helper to safely fetch distances using the 1D triangle matrix
-double GetDistance(const Params& p, int i, int j);
+inline double GetDistance(const Params& p, int i, int j) {
+    if (i == j) return 0.0;
+    return p.distance_matrix[p.index(i, j)];
+}
 
-// Formulates and solves the VRP using the MTZ constraints via OR-Tools
-double SolveVRPWithMTZ(const Params& p);
+double SolveCVRP_Routing(const Params& p);
 
 #endif // VRP_SOLVER_H

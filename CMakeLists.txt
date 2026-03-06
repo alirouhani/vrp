@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 2. Find Installed Packages
-set(ortools_DIR "/home/alimabna/or-tools/install/lib/cmake/ortools")
 find_package(ortools REQUIRED)
 
 # 3. Handle Google Test

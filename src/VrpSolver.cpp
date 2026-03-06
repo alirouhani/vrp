@@ -1,162 +1,96 @@
+// Example: Solve CVRP with OR-Tools Routing (C++)
+// Adapt to your Params struct (distance_matrix, demand vector, vehicle_capacity, K, N).
+#include "ortools/constraint_solver/routing.h"
+#include "ortools/constraint_solver/routing_index_manager.h"
+#include "ortools/constraint_solver/routing_parameters.h"
+#include "absl/time/time.h"
 #include "../include/VrpSolver.h"
-#include "ortools/linear_solver/linear_solver.h"
+#include <cmath>
 #include <iostream>
-#include <vector>
-#include <string>
-#include <memory>
 
 using namespace operations_research;
 
-double GetDistance(const Params& p, int i, int j) {
-    if (i == j) return 0.0;
-    return p.distance_matrix[p.index(i, j)];
-}
+double SolveCVRP_Routing(const Params& p) {
+  const int num_nodes = p.N;
+  const int num_vehicles = p.K;
+  const int depot = 0;
 
-double SolveVRPWithMTZ(const Params& p) {
-    // Create the linear solver with the SCIP backend
-    std::unique_ptr<MPSolver> solver(MPSolver::CreateSolver("SCIP"));
-    if (!solver) {
-        std::cerr << "SCIP solver not available." << std::endl;
-        return -1;
+  // Index manager and routing model
+  RoutingIndexManager manager(
+    num_nodes,
+    num_vehicles,
+    RoutingIndexManager::NodeIndex(0)
+  );
+  RoutingModel routing(manager);
+
+const int transit_callback_index = routing.RegisterTransitCallback(
+    [&p, &manager](int64_t from_index, int64_t to_index) -> int64_t {
+        int from = manager.IndexToNode(from_index).value();
+        int to   = manager.IndexToNode(to_index).value();
+        double d = GetDistance(p, from, to);
+        return static_cast<int64_t>(std::llround(d * 1000.0));
+    });
+
+  routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index);
+
+  // Demand callback
+  const int demand_callback_index = routing.RegisterUnaryTransitCallback(
+      [&p, &manager](int64_t from_index) -> int64_t {
+        int node = manager.IndexToNode(from_index).value();
+        return static_cast<int64_t>(p.demand[node]);
+      });
+
+  // Vehicle capacities vector
+  std::vector<int64_t> vehicle_capacities(num_vehicles, static_cast<int64_t>(p.vehicle_capacity));
+
+  // Add capacity dimension (name "Capacity")
+  routing.AddDimensionWithVehicleCapacity(
+      demand_callback_index,
+      /*slack_max=*/0,
+      vehicle_capacities,
+      /*start_cumul_to_zero=*/true,
+      "Capacity");
+
+  // OPTIONAL: If you want to forbid empty routes or force exactly used vehicles, use disjunctions
+  // or other constraints. By default unused vehicles allowed.
+
+  // Set search parameters
+  routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index);
+  RoutingSearchParameters searchParameters = DefaultRoutingSearchParameters();
+  searchParameters.set_first_solution_strategy(FirstSolutionStrategy::PARALLEL_CHEAPEST_INSERTION);
+//   searchParameters.set_first_solution_strategy(FirstSolutionStrategy::PATH_CHEAPEST_ARC);
+  searchParameters.set_local_search_metaheuristic(LocalSearchMetaheuristic::GUIDED_LOCAL_SEARCH);
+  searchParameters.mutable_time_limit()->set_seconds(10); // 10 seconds; adjust as needed
+  searchParameters.set_log_search(true);
+  
+  // Solve
+  const Assignment* solution = routing.SolveWithParameters(searchParameters);
+  if (!solution) {
+    std::cout << "No solution found by routing solver." << std::endl;
+    return -1.0;
+  }
+
+  // Extract solution and compute objective (remember to divide scale factor if used)
+  long long total_cost = 0;
+  for (int vehicle_id = 0; vehicle_id < num_vehicles; ++vehicle_id) {
+    int64_t index = routing.Start(vehicle_id);
+    if (routing.IsEnd(solution->Value(routing.NextVar(index)))) {
+      // route is empty if Start leads directly to End
+      continue;
     }
-
-    int N = p.N;
-    int K = p.K;
-
-    // -------------------------------------------------------------------------
-    // 1. Variables
-    // -------------------------------------------------------------------------
-    // x[i][j][k]: 1 if vehicle k travels from i to j
-    std::vector<std::vector<std::vector<const MPVariable*>>> x(
-        N, std::vector<std::vector<const MPVariable*>>(
-            N, std::vector<const MPVariable*>(K, nullptr)));
-
-    // y[i][k]: 1 if node i is visited by vehicle k
-    std::vector<std::vector<const MPVariable*>> y(
-        N, std::vector<const MPVariable*>(K, nullptr));
-
-    // u[i][k]: Accumulated load of vehicle k after visiting node i
-    std::vector<std::vector<const MPVariable*>> u(
-        N, std::vector<const MPVariable*>(K, nullptr));
-
-    for (int i = 0; i < N; ++i) {
-        for (int k = 0; k < K; ++k) {
-            y[i][k] = solver->MakeIntVar(0, 1, "y_" + std::to_string(i) + "_" + std::to_string(k));
-            u[i][k] = solver->MakeNumVar(p.demand[i], p.vehicle_capacity, "u_" + std::to_string(i) + "_" + std::to_string(k));
-            
-            for (int j = 0; j < N; ++j) {
-                if (i != j) {
-                    x[i][j][k] = solver->MakeIntVar(0, 1, "x_" + std::to_string(i) + "_" + std::to_string(j) + "_" + std::to_string(k));
-                }
-            }
-        }
+    std::cout << "Vehicle " << vehicle_id << " route: ";
+    while (!routing.IsEnd(index)) {
+      int node = manager.IndexToNode(index).value();
+      std::cout << node << " -> ";
+      int64_t next_index = solution->Value(routing.NextVar(index));
+      total_cost += routing.GetArcCostForVehicle(index, next_index, vehicle_id);
+      index = next_index;
     }
+    std::cout << manager.IndexToNode(index) << "\n"; // depot at end
+  }
 
-    // -------------------------------------------------------------------------
-    // 2. Objective: Minimize total travel distance
-    // -------------------------------------------------------------------------
-    MPObjective* const objective = solver->MutableObjective();
-    for (int i = 0; i < N; ++i) {
-        for (int j = 0; j < N; ++j) {
-            if (i != j) {
-                double dist = GetDistance(p, i, j);
-                for (int k = 0; k < K; ++k) {
-                    objective->SetCoefficient(x[i][j][k], dist);
-                }
-            }
-        }
-    }
-    objective->SetMinimization();
-
-    // -------------------------------------------------------------------------
-    // 3. Constraints
-    // -------------------------------------------------------------------------
-    
-    // Constraint: Each customer (excluding depot) must be visited exactly once
-    for (int i = 1; i < N; ++i) {
-        MPConstraint* c = solver->MakeRowConstraint(1, 1, "visit_" + std::to_string(i));
-        for (int k = 0; k < K; ++k) {
-            c->SetCoefficient(y[i][k], 1);
-        }
-    }
-
-    // Constraint: Capacity constraint per vehicle
-    for (int k = 0; k < K; ++k) {
-        MPConstraint* c = solver->MakeRowConstraint(-solver->infinity(), p.vehicle_capacity, "cap_" + std::to_string(k));
-        for (int i = 1; i < N; ++i) {
-            c->SetCoefficient(y[i][k], p.demand[i]);
-        }
-    }
-
-    // Constraint: Each vehicle starts at the depot
-    MPConstraint* depot_c = solver->MakeRowConstraint(K, K, "depot_start");
-    for (int k = 0; k < K; ++k) {
-        depot_c->SetCoefficient(y[0][k], 1);
-    }
-
-    // Flow & Continuity Constraints
-    for (int k = 0; k < K; ++k) {
-        for (int i = 0; i < N; ++i) {
-            // sum(x[i][j][k]) == sum(x[j][i][k])
-            MPConstraint* flow = solver->MakeRowConstraint(0, 0, "flow_" + std::to_string(i) + "_" + std::to_string(k));
-            // sum(x[i][j][k]) == y[i][k]
-            MPConstraint* link = solver->MakeRowConstraint(0, 0, "link_" + std::to_string(i) + "_" + std::to_string(k));
-            
-            for (int j = 0; j < N; ++j) {
-                if (i != j) {
-                    flow->SetCoefficient(x[i][j][k], 1);
-                    flow->SetCoefficient(x[j][i][k], -1);
-                    link->SetCoefficient(x[i][j][k], 1);
-                }
-            }
-            link->SetCoefficient(y[i][k], -1);
-        }
-    }
-
-    // MTZ Constraints: u[j,k] >= u[i,k] + demands[j] - Q*(1 - x[i,j,k])
-    for (int k = 0; k < K; ++k) {
-        for (int i = 1; i < N; ++i) {
-            for (int j = 1; j < N; ++j) {
-                if (i != j) {
-                    double rhs = p.vehicle_capacity - p.demand[j];
-                    MPConstraint* mtz = solver->MakeRowConstraint(-solver->infinity(), rhs, "");
-                    mtz->SetCoefficient(u[i][k], 1);
-                    mtz->SetCoefficient(u[j][k], -1);
-                    mtz->SetCoefficient(x[i][j][k], p.vehicle_capacity);
-                }
-            }
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // 4. Solve and Extract Routes
-    // -------------------------------------------------------------------------
-    solver->EnableOutput();
-    std::cout << "Solving model..." << std::endl;
-    MPSolver::ResultStatus result_status = solver->Solve();
-
-    if (result_status == MPSolver::OPTIMAL) {
-        std::cout << "Solution found!" << std::endl;
-        std::cout << "Objective value: " << objective->Value() << "\n" << std::endl;
-
-        for (int k = 0; k < K; ++k) {
-            std::cout << "Vehicle " << k << " Route: ";
-            std::vector<std::pair<int, int>> route;
-            for (int i = 0; i < N; ++i) {
-                for (int j = 0; j < N; ++j) {
-                    if (i != j && x[i][j][k]->solution_value() > 0.5) {
-                        route.push_back({i, j});
-                    }
-                }
-            }
-            for (const auto& edge : route) {
-                std::cout << "(" << edge.first << " -> " << edge.second << ") ";
-            }
-            std::cout << "\n";
-        }
-        return objective->Value();
-    } else {
-        std::cout << "The solver could not find an optimal solution." << std::endl;
-    }
-    return -1;
+  // If you scaled distances by 1000, divide back:
+  double cost = static_cast<double>(total_cost) / 1000.0;
+  std::cout << "Objective (approx): " << cost << std::endl;
+  return cost;
 }

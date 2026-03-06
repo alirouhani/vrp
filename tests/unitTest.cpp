@@ -25,6 +25,6 @@ TEST(ParamsTest, IsParseTrue) {
             );
         }
     }
-    double obj_val = SolveVRPWithMTZ(params);
+    double obj_val = SolveCVRP_Routing(params);
     EXPECT_EQ(obj_val, 450);
 }
