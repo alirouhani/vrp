@@ -49,7 +49,7 @@ target_link_libraries(vrp_app PRIVATE
 enable_testing()
 
 add_executable(vrp_tests
-    tests/unitTest.cpp
+    tests/solver_test.cpp
     $<TARGET_OBJECTS:vrp_core>
 )
 

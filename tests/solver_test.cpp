@@ -10,6 +10,13 @@ TEST(FileContentTest, IsFileEmpty) {
     EXPECT_NE(file.peek(), std::ifstream::traits_type::eof());
 }
 
+TEST(ModelTest, TrueObjetive) {
+    Params params;
+    params.loadFromFile("test_data.vrp");
+    double obj_val = SolveCVRP_Routing(params);
+    EXPECT_EQ(obj_val, 450);
+}
+
 TEST(ParamsTest, IsParseTrue) {
     Params params;
     params.loadFromFile("test_data.vrp");
@@ -17,6 +24,7 @@ TEST(ParamsTest, IsParseTrue) {
     EXPECT_EQ(params.K, 8);
     EXPECT_EQ(params.vehicle_capacity, 35);
     for (size_t i = 0; i < params.N; ++i) {
+        ASSERT_GE(params.demand[i],0);
         for (size_t j = 0; j < i; ++j) {
             ASSERT_NEAR(
                 params.distance_matrix[params.index(i,j)],
@@ -25,6 +33,4 @@ TEST(ParamsTest, IsParseTrue) {
             );
         }
     }
-    double obj_val = SolveCVRP_Routing(params);
-    EXPECT_EQ(obj_val, 450);
 }

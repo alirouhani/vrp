@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
         std::cout << "Loaded instance with " << p.N << " nodes and " 
                   << p.K << " vehicles. Capacity: " << p.vehicle_capacity << std::endl;
         
-        // SolveVRPWithMTZ(p);
+        
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }
