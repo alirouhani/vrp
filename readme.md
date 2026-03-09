@@ -1,36 +1,48 @@
-# Vehicle Routing Solver
+# Vehicle Routing Problem (VRP)
 
-### 📦 Features
+A lightweight C++ implementation for experimenting with algorithms for the **Vehicle Routing Problem (VRP)**.
 
-* **Fast Optimization:** Quickly calculates routes for multiple vehicles.
-* **Efficient Code:** Built with modern C++ for speed and low memory usage.
-* **Simple Input:** Easily load customer locations and vehicle capacities.
+The project focuses on **simple and transparent algorithmic implementations** for studying routing strategies and graph-based optimization methods.
 
 ---
 
-### 🚀 How to Run
+## Implemented Algorithms
 
-1. **Build the project:**
-```bash
-mkdir build && cd build
-cmake ..
-make
+### Greedy Heuristic
 
-```
+A constructive heuristic that iteratively selects the **nearest unvisited customer**.
 
+At each step the vehicle moves to the node with the **minimum travel distance** from the current location.
 
-2. **Run the solver:**
-```bash
-./vrp_solver input_data.txt
+Characteristics:
 
-```
-
-
+- Very fast
+- Easy to implement
+- Provides a baseline solution for VRP experiments
 
 ---
 
-### 🛠️ Project Structure
+### Dijkstra-based Search
 
-* `src/`: Core logic and optimization algorithms.
-* `include/`: Header files and data structures.
-* `data/`: Example delivery scenarios.
+A shortest-path approach adapted for VRP exploration.
+
+The algorithm uses **Dijkstra's method** to evaluate paths and maintain the best partial routes according to accumulated travel cost.
+
+This approach allows systematic exploration of feasible routing states while maintaining optimality with respect to the path cost metric.
+
+---
+
+## Repository Structure
+vrp/
+├── src/ # Core implementation
+├── include/ # Header files
+├── tests/ # Unit tests
+├── CMakeLists.txt
+└── README.md
+
+## Purpose
+This repository is intended for:
+1. Experimentation with VRP algorithms
+2. Studying heuristic routing strategies
+3. Testing graph search approaches for routing problems
+4. The implementation prioritizes clarity and algorithmic transparency over framework complexity.
