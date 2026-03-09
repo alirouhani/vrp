@@ -32,14 +32,6 @@ This approach allows systematic exploration of feasible routing states while mai
 
 ---
 
-## Repository Structure
-vrp/
-├── src/ # Core implementation
-├── include/ # Header files
-├── tests/ # Unit tests
-├── CMakeLists.txt
-└── README.md
-
 ## Purpose
 This repository is intended for:
 1. Experimentation with VRP algorithms
