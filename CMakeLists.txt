@@ -51,6 +51,7 @@ enable_testing()
 add_executable(vrp_tests
     tests/solver_test.cpp
     tests/greedy_test.cpp
+    tests/Dijkstra_test.cpp
     $<TARGET_OBJECTS:vrp_core>
 )
 

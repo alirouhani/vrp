@@ -1,4 +1,5 @@
 #include "include/Params.h"
+#include "include/Dijkstra.h"
 #include <iostream>
 #include <string>
 
@@ -15,7 +16,6 @@ int main(int argc, char** argv) {
                   << p.K << " vehicles. Capacity: " << p.vehicle_capacity << std::endl;
         
         
-
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }

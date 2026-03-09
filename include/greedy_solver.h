@@ -15,8 +15,7 @@ struct greedy_result {
     // Edge case: No customers to visit
     if (p.N <= 1) return {p.N, 0.0}; 
 
-    std::vector<uint8_t> visited(p.N, 0);
-    visited[0] = 1; 
+    std::vector<std::pair<int,int>> visited(p.N, std::make_pair(-1,-1));
 
     int customers_visited = 0;
     const int total_customers = p.N - 1;
@@ -36,7 +35,7 @@ struct greedy_result {
             int best_index = -1;
 
             for (int j = 1; j < p.N; ++j) {
-                if (!visited[j] && p.demand[j] <= remain_cap) {
+                if (visited[j].first == -1 && p.demand[j] <= remain_cap) {
                     double d = p.distance_matrix[p.index(current_node, j)];
                     if (d < min_distance) {
                         min_distance = d;
@@ -52,7 +51,7 @@ struct greedy_result {
             }
 
             // Visit the best customer found
-            visited[best_index] = 1;
+            visited[best_index] = std::make_pair(k,current_node);
             customers_visited++;
             total_distance += min_distance;
             remain_cap -= p.demand[best_index];
@@ -65,7 +64,9 @@ struct greedy_result {
             }
         }
     }
-
+    // for (std::size_t i = 1; i < p.N; ++i) {
+    //     std::cout << "Vehicle " << visited[i].first << " traverse arc (" << visited[i].second << " , " << i << ")." << std::endl;
+    // }
     // Return customers visited + 1
     return {customers_visited + 1, total_distance};
 }

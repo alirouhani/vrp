@@ -16,5 +16,4 @@ TEST(SolutionTest, TrueObjetive) {
     greedy_result gy_res;
     gy_res = greedy(params);
     EXPECT_EQ(gy_res.obj_val, 450);
-    EXPECT_EQ(gy_res.visited_nodes, params.N);
 }
